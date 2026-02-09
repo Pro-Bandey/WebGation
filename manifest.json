@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "QuickNav Buttons",
+  "version": "1.0",
+  "description": "Adds Back / Forward / Reload / Home / Close controls in Static or Floating mode, per-site settings, import/export and theme-aware colors.",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "QuickNav"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["static.js", "floating.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

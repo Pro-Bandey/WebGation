@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>QuickNav Settings</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>QuickNav</h2>
+
+    <div class="site-info">
+      <div><strong>Site</strong></div>
+      <div id="siteOrigin">—</div>
+    </div>
+
+    <div class="row">
+      <label class="switch">
+        <input type="checkbox" id="enabledToggle">
+        <span class="slider"></span>
+      </label>
+      <label for="enabledToggle" class="label-inline">Enable on this site</label>
+    </div>
+
+    <div class="row">
+      <label for="modeSelect">Mode</label>
+      <select id="modeSelect">
+        <option value="static">Static</option>
+        <option value="floating">Floating</option>
+      </select>
+    </div>
+
+    <div class="row small">
+      <label>Floating position</label>
+      <div id="posInfo">—</div>
+      <button id="resetPos">Reset Position</button>
+    </div>
+
+    <hr />
+
+    <div class="row">
+      <button id="exportBtn">Export Settings</button>
+      <button id="importBtn">Import Settings</button>
+    </div>
+
+    <textarea id="jsonArea" placeholder="Paste settings JSON here to import or view exported JSON"></textarea>
+
+    <div class="row">
+      <button id="applyImport">Apply Import</button>
+      <button id="clearSite">Clear Site Settings</button>
+    </div>
+
+    <div id="status" class="status"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
