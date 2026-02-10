@@ -1,8 +1,8 @@
-# 🚀 QuickNav Buttons
+# 🚀 WebGation
 
-**QuickNav Buttons** is a lightweight, high-performance Chrome Extension designed to enhance your browsing speed. It provides intelligent, context-aware navigation controls in two distinct modes: **Static** (sleek sidebars) and **Floating** (draggable pill).
+**WebGation** is a lightweight, high-performance Chrome Extension designed to enhance your browsing speed. It provides intelligent, context-aware navigation controls in two distinct modes: **Static** (sleek sidebars) and **Floating** (draggable pill).
 
-![Static Mode Preview](https://via.placeholder.com/800x400?text=QuickNav+Static+Mode+Navigation)
+![Static Mode Preview](./src/128.png)
 
 ## ✨ Features
 
@@ -20,7 +20,7 @@
     - Toggle the extension on/off for specific websites.
     - Save unique positions for the floating bar on every site.
 - **Native Experience**:
-    - Home button redirects to a custom [Online Homepage](https://online-homepage.vercel.app/).
+    - Home button redirects to a custom [Homepage](https://online-homepage.vercel.app/).
     - Optimized for performance using Manifest V3 and the modern Navigation API.
 
 ---
@@ -31,7 +31,7 @@
 2.  Open your browser and navigate to `chrome://extensions/`.
 3.  Enable **Developer mode** (usually a toggle in the top right corner).
 4.  Click **Load unpacked** and select the folder containing the extension files.
-5.  QuickNav is now ready! Upon installation, you will be greeted by the [Welcome Page](https://ttiny.ga/tion).
+5.  webgation is now ready! Upon installation, you will be greeted by the [Welcome Page](https://ttiny.ga/tion).
 
 ---
 

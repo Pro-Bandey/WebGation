@@ -1,16 +1,30 @@
 {
   "manifest_version": 3,
-  "name": "QuickNav Buttons",
-  "version": "1.0",
-  "description": "Adds Back / Forward / Reload / Home / Close controls in Static or Floating mode, per-site settings, import/export and theme-aware colors.",
-  "permissions": ["storage", "activeTab", "scripting"],
-  "background": {
-    "service_worker": "background.js"
+  "name": "WebGation",
+  "short_name": "WebGation",
+  "version": "5.57",
+  "version_name": "v5.57_build_57",
+  "author": "MicroResearch Corporation®",
+  "description": "WebGation is a lightweight, high-performance Chrome Extension designed to enhance your browsing speed.",
+  "minimum_chrome_version": "130",
+  "offline_enabled": false,
+  "homepage_url": "https://microresearch-corporation.github.io/",
+  "icons": {
+    "16": "./src/16.png",
+    "48": "./src/48.png",
+    "128": "./src/128.png",
+    "256": "./src//logo.png"
   },
-  "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "QuickNav"
+    "default_title": "WebGation",
+    "browser_style": true,
+    "default_icon": {
+      "16": "./src/16.png",
+      "48": "./src/48.png",
+      "128": "./src/128.png",
+      "256": "./src//logo.png"
+    }
   },
   "content_scripts": [
     {
@@ -19,6 +33,12 @@
       "run_at": "document_idle"
     }
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "incognito": "split",
   "web_accessible_resources": [
     {
       "resources": ["static.js", "floating.js"],

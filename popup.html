@@ -1,39 +1,47 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>QuickNav Settings</title>
+  <title>webgation Settings</title>
   <link rel="stylesheet" href="popup.css" />
 </head>
+
 <body>
   <div class="container">
-    <h2>QuickNav</h2>
-
+    <div class="row">
+      <h2>WebGation</h2>
+       <a href="https://github.com/Pro-Bandey/WebGator" target="_blank">
+        Rate it
+      </a>
+    </div>
+    <hr />
     <div class="site-info">
-      <div><strong>Site</strong></div>
-      <div id="siteOrigin">—</div>
+      <strong>Current Site</strong>
+      <a id="siteOriginLink" target="_blank">
+        <div id="siteOrigin">—</div>
+      </a>
     </div>
 
     <div class="row">
+      <label for="enabledToggle" class="label-inline">Enable on this site</label>
       <label class="switch">
         <input type="checkbox" id="enabledToggle">
         <span class="slider"></span>
       </label>
-      <label for="enabledToggle" class="label-inline">Enable on this site</label>
     </div>
 
     <div class="row">
-      <label for="modeSelect">Mode</label>
+      <label for="modeSelect" style="font-weight:800;font-size:16px;">Mode</label>
       <select id="modeSelect">
-        <option value="static">Static</option>
+        <option selected value="static">Static</option>
         <option value="floating">Floating</option>
       </select>
     </div>
 
-    <div class="row small">
-      <label>Floating position</label>
-      <div id="posInfo">—</div>
+    <div class="row">
+      <label style="display: flex;flex-direction: column;">Floating position <span id="posInfo">—</span></label>
       <button id="resetPos">Reset Position</button>
     </div>
 
@@ -56,4 +64,5 @@
 
   <script src="popup.js"></script>
 </body>
+
 </html>

@@ -1,7 +1,8 @@
-// popup.js
+
 const enabledToggle = document.getElementById('enabledToggle');
 const modeSelect = document.getElementById('modeSelect');
 const siteOriginEl = document.getElementById('siteOrigin');
+const siteOriginLink = document.getElementById('siteOriginLink');
 const posInfo = document.getElementById('posInfo');
 const resetPosBtn = document.getElementById('resetPos');
 const exportBtn = document.getElementById('exportBtn');
@@ -12,15 +13,15 @@ const clearSiteBtn = document.getElementById('clearSite');
 const statusEl = document.getElementById('status');
 
 let currentOrigin = null;
-let settings = {}; // full settings object
+let settings = {};
 
 function showStatus(msg, timeout = 2500) {
   statusEl.textContent = msg;
-  if (timeout) setTimeout(()=> statusEl.textContent = '', timeout);
+  if (timeout) setTimeout(() => statusEl.textContent = '', timeout);
 }
 
 async function getActiveTabOrigin() {
-  const [tab] = await chrome.tabs.query({active:true, currentWindow:true});
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab || !tab.url) return null;
   try {
     const url = new URL(tab.url);
@@ -33,12 +34,22 @@ async function getActiveTabOrigin() {
 async function loadSettings() {
   currentOrigin = await getActiveTabOrigin();
   siteOriginEl.textContent = currentOrigin || 'Unknown';
-  const data = await chrome.storage.local.get('quicknav_settings');
-  settings = data.quicknav_settings || {};
+  const data = await chrome.storage.local.get('webgation_settings');
+  settings = data.webgation_settings || {};
   const siteKey = currentOrigin || '__unknown__';
   const siteSettings = settings[siteKey] || { enabled: true, mode: 'floating', position: null };
   enabledToggle.checked = !!siteSettings.enabled;
   modeSelect.value = siteSettings.mode || 'floating';
+  if (currentOrigin) {
+    const aboutUrl =
+      'https://www.google.com/search?q=' +
+      encodeURIComponent('About ' + currentOrigin) +
+      '&tbm=ilp&ctx=chrome';
+
+    siteOriginLink.href = aboutUrl;
+  } else {
+    siteOriginLink.removeAttribute('href');
+  }
   if (siteSettings.position) {
     posInfo.textContent = `x: ${siteSettings.position.x}, y: ${siteSettings.position.y}`;
   } else {
@@ -52,12 +63,11 @@ async function saveSiteSettings() {
   settings[siteKey] = settings[siteKey] || {};
   settings[siteKey].enabled = enabledToggle.checked;
   settings[siteKey].mode = modeSelect.value;
-  await chrome.storage.local.set({ quicknav_settings: settings });
+  await chrome.storage.local.set({ webgation_settings: settings });
   showStatus('Saved');
-  // notify content script to re-inject or remove
-  const [tab] = await chrome.tabs.query({active:true, currentWindow:true});
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (tab && tab.id) {
-    chrome.tabs.sendMessage(tab.id, { type: 'settingsUpdated' }).catch(()=>{});
+    chrome.tabs.sendMessage(tab.id, { type: 'settingsUpdated' }).catch(() => { });
   }
 }
 
@@ -69,17 +79,17 @@ resetPosBtn.addEventListener('click', async () => {
   const siteKey = currentOrigin;
   if (settings[siteKey]) {
     delete settings[siteKey].position;
-    await chrome.storage.local.set({ quicknav_settings: settings });
+    await chrome.storage.local.set({ webgation_settings: settings });
     posInfo.textContent = 'Not set';
     showStatus('Position reset');
-    const [tab] = await chrome.tabs.query({active:true, currentWindow:true});
-    if (tab && tab.id) chrome.tabs.sendMessage(tab.id, { type: 'settingsUpdated' }).catch(()=>{});
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab && tab.id) chrome.tabs.sendMessage(tab.id, { type: 'settingsUpdated' }).catch(() => { });
   }
 });
 
 exportBtn.addEventListener('click', async () => {
-  const data = await chrome.storage.local.get('quicknav_settings');
-  const json = JSON.stringify(data.quicknav_settings || {}, null, 2);
+  const data = await chrome.storage.local.get('webgation_settings');
+  const json = JSON.stringify(data.webgation_settings || {}, null, 2);
   jsonArea.value = json;
   showStatus('Exported to text area');
 });
@@ -94,12 +104,12 @@ applyImportBtn.addEventListener('click', async () => {
   try {
     const parsed = JSON.parse(text);
     if (typeof parsed !== 'object' || parsed === null) throw new Error('Invalid JSON');
-    await chrome.storage.local.set({ quicknav_settings: parsed });
+    await chrome.storage.local.set({ webgation_settings: parsed });
     settings = parsed;
     await loadSettings();
     showStatus('Imported settings');
-    const [tab] = await chrome.tabs.query({active:true, currentWindow:true});
-    if (tab && tab.id) chrome.tabs.sendMessage(tab.id, { type: 'settingsUpdated' }).catch(()=>{});
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab && tab.id) chrome.tabs.sendMessage(tab.id, { type: 'settingsUpdated' }).catch(() => { });
   } catch (e) {
     showStatus('Invalid JSON: ' + e.message);
   }
@@ -110,11 +120,11 @@ clearSiteBtn.addEventListener('click', async () => {
   const siteKey = currentOrigin;
   if (settings[siteKey]) {
     delete settings[siteKey];
-    await chrome.storage.local.set({ quicknav_settings: settings });
+    await chrome.storage.local.set({ webgation_settings: settings });
     await loadSettings();
     showStatus('Site settings cleared');
-    const [tab] = await chrome.tabs.query({active:true, currentWindow:true});
-    if (tab && tab.id) chrome.tabs.sendMessage(tab.id, { type: 'settingsUpdated' }).catch(()=>{});
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab && tab.id) chrome.tabs.sendMessage(tab.id, { type: 'settingsUpdated' }).catch(() => { });
   } else {
     showStatus('No settings for this site');
   }

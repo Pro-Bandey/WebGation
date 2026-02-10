@@ -1,6 +1,6 @@
 
 (function () {
-  const STORAGE_KEY = 'quicknav_settings';
+  const STORAGE_KEY = 'webgation_settings';
 
   function isContextValid() {
     return !!chrome.runtime?.id;
@@ -27,24 +27,24 @@
   function injectModeScript(mode) {
     if (!isContextValid()) return;
     
-    const file = mode === 'static' ? 'static.js' : 'floating.js';
+    const file = mode === 'floating' ? 'floating.js' : 'static.js';
     const url = chrome.runtime.getURL(file);
     
     removeInjectedUI();
     const s = document.createElement('script');
     s.src = url;
-    s.id = 'quicknav-injected-script';
+    s.id = 'webgation-injected-script';
     (document.head || document.documentElement).appendChild(s);
   }
 
   function removeInjectedUI() {
-    const existingScript = document.getElementById('quicknav-injected-script');
+    const existingScript = document.getElementById('webgation-injected-script');
     if (existingScript) existingScript.remove();
-    window.postMessage({ __quicknav: true, type: 'destroyUI' }, '*');
+    window.postMessage({ __webgation: true, type: 'destroyUI' }, '*');
   }
 
   window.addEventListener('message', async (ev) => {
-    if (!isContextValid() || !ev.data || ev.source !== window || !ev.data.__quicknav) return;
+    if (!isContextValid() || !ev.data || ev.source !== window || !ev.data.__webgation) return;
     
     const msg = ev.data;
     const siteKey = getSiteKey();
@@ -52,12 +52,12 @@
     try {
       if (msg.type === 'getSettings') {
         const settings = await loadSettings();
-        const siteSettings = settings[siteKey] || { enabled: true, mode: 'floating', position: null };
-        window.postMessage({ __quicknav: true, type: 'receiveSettings', payload: siteSettings }, '*');
+        const siteSettings = settings[siteKey] || { enabled: true, mode: 'static', position: null };
+        window.postMessage({ __webgation: true, type: 'receiveSettings', payload: siteSettings }, '*');
       } 
       else if (msg.type === 'savePosition') {
         const settings = await loadSettings();
-        settings[siteKey] = settings[siteKey] || { enabled: true, mode: 'floating' };
+        settings[siteKey] = settings[siteKey] || { enabled: true, mode: 'static' };
         settings[siteKey].position = msg.payload;
         await chrome.storage.local.set({ [STORAGE_KEY]: settings });
       }
@@ -65,7 +65,7 @@
         chrome.runtime.sendMessage({ type: 'open_new_tab' });
       }
     } catch (e) {
-      console.log("QuickNav: Connection lost (extension reloaded). Please refresh the page.");
+      console.log("webgation: Connection lost (extension reloaded). Please refresh the page.");
     }
   });
 
@@ -80,7 +80,7 @@
   async function init() {
     if (!isContextValid()) return;
     const settings = await loadSettings();
-    const siteSettings = settings[getSiteKey()] || { enabled: true, mode: 'floating' };
+    const siteSettings = settings[getSiteKey()] || { enabled: true, mode: 'static' };
     
     if (siteSettings.enabled) {
       injectModeScript(siteSettings.mode);

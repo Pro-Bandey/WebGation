@@ -17,8 +17,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-const INSTALL_URL = "https://tiny.gation";
-const UNINSTALL_URL = "https://unintall.gation";
+const INSTALL_URL = "https://github.com/Pro-Bandey/WebGation/wiki/";
+const UNINSTALL_URL = "https://github.com/Pro-Bandey/WebGation/issues/new/choose/";
 
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
