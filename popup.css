@@ -38,18 +38,18 @@ body {
   font-size: 13px;
 }
 
- a {
+a {
   color: aliceblue;
   font-weight: 500;
 }
 
 .row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    margin: 10px 0;
-    color: aliceblue;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+  color: aliceblue;
 }
 
 
@@ -120,28 +120,31 @@ button {
   width: 120px;
   border: none
 }
+
 button:hover {
-background: #013358;
+  background: #013358;
 }
+
 button[disabled] {
   opacity: .6;
   cursor: default
 }
 
 textarea {
-      width: 100%;
-    min-height: 100px;
-    max-height: 250px;
-    height: 120px;
-    resize: vertical;
-    margin-top: 8px;
-    font-family: monospace;
+  width: 100%;
+  min-height: 100px;
+  max-height: 250px;
+  height: 120px;
+  resize: vertical;
+  margin-top: 8px;
+  font-family: monospace;
 }
 
 .status {
+  text-align: center;
   margin-top: 8px;
   font-size: 12px;
-  color: var(--muted)
+  color: var(--accent);
 }
 
 #posInfo {

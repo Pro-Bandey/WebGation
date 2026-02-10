@@ -37,9 +37,9 @@ async function loadSettings() {
   const data = await chrome.storage.local.get('webgation_settings');
   settings = data.webgation_settings || {};
   const siteKey = currentOrigin || '__unknown__';
-  const siteSettings = settings[siteKey] || { enabled: true, mode: 'floating', position: null };
+  const siteSettings = settings[siteKey] || { enabled: true, mode: 'static', position: null };
   enabledToggle.checked = !!siteSettings.enabled;
-  modeSelect.value = siteSettings.mode || 'floating';
+  modeSelect.value = siteSettings.mode || 'static';
   if (currentOrigin) {
     const aboutUrl =
       'https://www.google.com/search?q=' +
