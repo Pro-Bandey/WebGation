@@ -43,6 +43,28 @@
     window.postMessage({ __webgation: true, type: 'destroyUI' }, '*');
   }
 
+  function reportNavigation() {
+    if (!isContextValid()) return;
+    
+    if (window.navigation && window.navigation.currentEntry) {
+      const entry = window.navigation.currentEntry;
+      chrome.runtime.sendMessage({
+        type: 'report_nav',
+        payload: {
+          url: location.href,
+          title: document.title,
+          key: entry.key || entry.id
+        }
+      }).catch(() => { });
+    }
+  }
+
+  if (window.navigation) {
+    window.navigation.addEventListener('currententrychange', () => {
+      setTimeout(reportNavigation, 50);
+    });
+  }
+
   window.addEventListener('message', async (ev) => {
     if (!isContextValid() || !ev.data || ev.source !== window || !ev.data.__webgation) return;
     
@@ -64,6 +86,13 @@
       else if (msg.type === 'openHome') {
         chrome.runtime.sendMessage({ type: 'open_new_tab' });
       }
+      else if (msg.type === 'getHistory') {
+        reportNavigation(); 
+        
+        chrome.runtime.sendMessage({ type: 'get_tab_history' }, (response) => {
+          window.postMessage({ __webgation: true, type: 'receiveHistory', payload: response }, '*');
+        });
+      }
     } catch (e) {
       console.log("webgation: Connection lost (extension reloaded). Please refresh the page.");
     }
@@ -79,6 +108,9 @@
 
   async function init() {
     if (!isContextValid()) return;
+    
+    reportNavigation();
+
     const settings = await loadSettings();
     const siteSettings = settings[getSiteKey()] || { enabled: true, mode: 'static' };
     
@@ -88,6 +120,10 @@
       removeInjectedUI();
     }
   }
+
+  window.addEventListener('pageshow', () => {
+    reportNavigation();
+  });
 
   init();
 })();

@@ -1,3 +1,4 @@
+
 (function () {
   if (window.__webgation_static_active) return;
   window.__webgation_static_active = true;
@@ -6,12 +7,37 @@
   const HOME_URL = "https://online-homepage.vercel.app/";
   let hideTimer;
   let lastScroll = window.scrollY;
+  function mkEl(tag, props = {}, children = []) {
+    const el = document.createElement(tag);
+    for (const [key, val] of Object.entries(props)) {
+      if (key === 'dataset') {
+        for (const [dKey, dVal] of Object.entries(val)) el.dataset[dKey] = dVal;
+      } else if (key === 'style' && typeof val === 'object') {
+        Object.assign(el.style, val);
+      } else {
+        el[key] = val;
+      }
+    }
+    children.forEach(child => {
+      if (typeof child === 'string') el.appendChild(document.createTextNode(child));
+      else if (child) el.appendChild(child);
+    });
+    return el;
+  }
+
+  function createSvgIcon(pathData) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", pathData);
+    svg.appendChild(path);
+    return svg;
+  }
 
   function captureTitle() {
-    if (!document.title || !window.navigation || !window.navigation.currentEntry) return;
+    if (!document.title) return;
     try {
-      const key = window.navigation.currentEntry.key;
-      sessionStorage.setItem('wg_title_' + key, document.title);
+      sessionStorage.setItem('wg_current_title', document.title);
     } catch (e) { }
   }
 
@@ -71,8 +97,8 @@
 
     .wg-history-menu {
       position: fixed;
-      background: rgba(30, 30, 30, 0.95);
-      backdrop-filter: blur(15px);
+      background: rgba(98, 98, 98, 0.1); 
+      backdrop-filter: blur(12px) saturate(6);
       border: 1px solid rgba(0,0,0,0.1);
       border-radius: 20px;
       padding: 6px;
@@ -105,7 +131,7 @@
     .wg-hist-item {
       padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 13px;
       display: flex; flex-direction: column; gap: 2px; transition: background 0.1s;
-      border-bottom: 1px solid rgba(0,0,0,0.03);
+      border-bottom: 1px solid rgba(0,0,0,0.03);color: #e3e3e3;
     }
     .wg-hist-item:last-child { border-bottom: none; }
     .wg-hist-item:hover { background: rgba(255,255,255,0.2); color: white; }
@@ -117,33 +143,36 @@
     .wg-hist-disabled { padding: 10px; color: #999; text-align: center; font-style: italic; font-size: 13px; }
   `;
 
-  const icons = {
-    back: `<svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>`,
-    forward: `<svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>`,
-    reload: `<svg viewBox="0 0 24 24"><path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/></svg>`,
-    home: `<svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>`,
-    close: `<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`
+  const iconPaths = {
+    back: "M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z",
+    forward: "M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z",
+    reload: "M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z",
+    home: "M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z",
+    close: "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
   };
 
   const styleEl = document.createElement('style');
   styleEl.textContent = css;
   document.head.appendChild(styleEl);
 
-  const root = document.createElement('div');
-  root.id = ROOT_ID;
-  root.innerHTML = `
-    <div class="wg-top-container" id="wg-top-bar">
-      <button class="wg-btn" id="wg-reload" title="Reload">${icons.reload}</button>
-      <button class="wg-btn" id="wg-home" title="Home">${icons.home}</button>
-      <button class="wg-btn" id="wg-close" title="Close Tab">${icons.close}</button>
-    </div>
-    <div class="wg-sidebar wg-left" id="wg-back" title="Back">${icons.back}</div>
-    <div class="wg-sidebar wg-right" id="wg-forward" title="Forward">${icons.forward}</div>
-    <div class="wg-history-menu" id="wg-menu"></div>
-  `;
+  const btnReload = mkEl('button', { className: 'wg-btn', id: 'wg-reload', title: 'Reload' }, [createSvgIcon(iconPaths.reload)]);
+  const btnHome = mkEl('button', { className: 'wg-btn', id: 'wg-home', title: 'Home' }, [createSvgIcon(iconPaths.home)]);
+  const btnClose = mkEl('button', { className: 'wg-btn', id: 'wg-close', title: 'Close Tab' }, [createSvgIcon(iconPaths.close)]);
+
+  const topBar = mkEl('div', { className: 'wg-top-container', id: 'wg-top-bar' }, [
+    btnReload, btnHome, btnClose
+  ]);
+
+  const sidebarBack = mkEl('div', { className: 'wg-sidebar wg-left', id: 'wg-back', title: 'Back' }, [createSvgIcon(iconPaths.back)]);
+  const sidebarForward = mkEl('div', { className: 'wg-sidebar wg-right', id: 'wg-forward', title: 'Forward' }, [createSvgIcon(iconPaths.forward)]);
+  const menu = mkEl('div', { className: 'wg-history-menu', id: 'wg-menu' });
+
+  const root = mkEl('div', { id: ROOT_ID }, [
+    topBar, sidebarBack, sidebarForward, menu
+  ]);
+
   document.body.appendChild(root);
 
-  const topBar = document.getElementById('wg-top-bar');
   function toggleTopBar(show) { show ? topBar.classList.add('visible') : topBar.classList.remove('visible'); }
 
   document.addEventListener('mousemove', (e) => {
@@ -156,59 +185,66 @@
     lastScroll = y;
   });
 
-  document.getElementById('wg-back').onclick = () => history.back();
-  document.getElementById('wg-forward').onclick = () => history.forward();
-  document.getElementById('wg-reload').onclick = () => location.reload();
+  sidebarBack.onclick = () => history.back();
+  sidebarForward.onclick = () => history.forward();
+  btnReload.onclick = () => location.reload();
 
-  document.getElementById('wg-home').onclick = () => {
+  btnHome.onclick = () => {
     captureTitle();
     location.href = HOME_URL;
   };
 
-  document.getElementById('wg-close').onclick = () => window.close();
-
-  const menu = document.getElementById('wg-menu');
+  btnClose.onclick = () => window.close();
 
   function getPrettyUrl(urlStr) {
     try { const u = new URL(urlStr); return u.hostname.replace('www.', '') + (u.pathname.length > 1 ? u.pathname : ''); }
     catch { return 'External Page'; }
   }
 
-  function showHistory(e, direction) {
-    e.preventDefault();
-    menu.innerHTML = '';
-    const nav = window.navigation;
-    if (!nav) { menu.innerHTML = `<div class="wg-hist-disabled">Browser not supported</div>`; menu.style.display = 'flex'; return; }
+  let historyRequestOrigin = null;
 
-    const entries = nav.entries();
-    const currentIdx = nav.currentEntry ? nav.currentEntry.index : 0;
+  function requestHistory(e, direction) {
+    e.preventDefault();
+    historyRequestOrigin = { direction, x: e.clientX, y: e.clientY, target: e.target };
+    window.postMessage({ __webgation: true, type: 'getHistory' }, '*');
+  }
+
+  function renderHistoryMenu(data) {
+    menu.replaceChildren();
+
+    const { stack, currentIdx } = data || { stack: [], currentIdx: 0 };
+    const direction = historyRequestOrigin ? historyRequestOrigin.direction : 'back';
     const isBack = direction === 'back';
-    let list = isBack ? entries.slice(0, currentIdx).reverse() : entries.slice(currentIdx + 1);
+    
+    let list = [];
+    if (isBack) {
+      list = stack.slice(0, currentIdx).reverse();
+    } else {
+      list = stack.slice(currentIdx + 1);
+    }
 
     if (list.length === 0) {
-      menu.innerHTML = `<div class="wg-hist-disabled">No ${isBack ? 'back' : 'forward'} history</div>`;
+      const msg = mkEl('div', { 
+        className: 'wg-hist-disabled', 
+        textContent: `No ${isBack ? 'back' : 'forward'} history` 
+      });
+      menu.appendChild(msg);
     } else {
       list.slice(0, 10).forEach((entry, i) => {
-        const step = isBack ? -(i + 1) : (i + 1);
-
-        let displayTitle = sessionStorage.getItem('wg_title_' + entry.key);
-        if (!displayTitle && entry.name) displayTitle = entry.name;
-        if (!displayTitle) displayTitle = getPrettyUrl(entry.url);
-
+        let delta = isBack ? -(i + 1) : (i + 1);
+        let displayTitle = entry.title || getPrettyUrl(entry.url);
         const displayUrl = getPrettyUrl(entry.url);
 
-        const item = document.createElement('div');
-        item.className = 'wg-hist-item';
-        item.innerHTML = `
-            <div class="wg-h-row">
-                <div class="wg-h-title">${displayTitle}</div>
-                <div class="wg-h-idx">${step > 0 ? '+' + step : step}</div>
-            </div>
-            <div class="wg-h-url">${displayUrl}</div>
-        `;
+        const row = mkEl('div', { className: 'wg-h-row' }, [
+          mkEl('div', { className: 'wg-h-title', textContent: displayTitle }),
+          mkEl('div', { className: 'wg-h-idx', textContent: delta > 0 ? '+' + delta : delta })
+        ]);
+        const urlRow = mkEl('div', { className: 'wg-h-url', textContent: displayUrl });
+        const item = mkEl('div', { className: 'wg-hist-item' }, [row, urlRow]);
+
         item.onclick = (ev) => {
           ev.stopPropagation();
-          nav.traverseTo(entry.key);
+          history.go(delta);
           menu.style.display = 'none';
         };
         menu.appendChild(item);
@@ -216,20 +252,27 @@
     }
 
     menu.style.display = 'flex';
-    const rect = e.target.closest('.wg-sidebar').getBoundingClientRect();
-    menu.style.top = Math.max(10, rect.top) + 'px';
-    const menuRect = menu.getBoundingClientRect();
-    if (menuRect.bottom > window.innerHeight) { menu.style.top = 'auto'; menu.style.bottom = '10px'; }
-    if (isBack) { menu.style.left = '60px'; menu.style.right = 'auto'; }
-    else { menu.style.right = '60px'; menu.style.left = 'auto'; }
+    if (historyRequestOrigin) {
+        const rect = historyRequestOrigin.target.closest('.wg-sidebar').getBoundingClientRect();
+        menu.style.top = Math.max(10, rect.top) + 'px';
+        const menuRect = menu.getBoundingClientRect();
+        if (menuRect.bottom > window.innerHeight) { menu.style.top = 'auto'; menu.style.bottom = '10px'; }
+        if (isBack) { menu.style.left = '60px'; menu.style.right = 'auto'; }
+        else { menu.style.right = '60px'; menu.style.left = 'auto'; }
+    }
   }
 
-  document.getElementById('wg-back').oncontextmenu = (e) => showHistory(e, 'back');
-  document.getElementById('wg-forward').oncontextmenu = (e) => showHistory(e, 'forward');
+  sidebarBack.oncontextmenu = (e) => requestHistory(e, 'back');
+  sidebarForward.oncontextmenu = (e) => requestHistory(e, 'forward');
   document.addEventListener('click', (e) => { if (!menu.contains(e.target)) menu.style.display = 'none'; });
 
   window.addEventListener('message', (e) => {
-    if (e.data && e.data.type === 'destroyUI') {
+    if (!e.data || e.data.__webgation !== true) return;
+    
+    if (e.data.type === 'receiveHistory') {
+      renderHistoryMenu(e.data.payload);
+    }
+    if (e.data.type === 'destroyUI') {
       root.remove(); styleEl.remove(); titleObserver.disconnect();
       window.__webgation_static_active = false;
     }

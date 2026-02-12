@@ -1,3 +1,4 @@
+
 (function () {
   if (window.__webgation_floating_active) return;
   window.__webgation_floating_active = true;
@@ -6,14 +7,39 @@
   const HOME_URL = "https://online-homepage.vercel.app/";
   let hideTimer;
 
+  function mkEl(tag, props = {}, children = []) {
+    const el = document.createElement(tag);
+    for (const [key, val] of Object.entries(props)) {
+      if (key === 'dataset') {
+        for (const [dKey, dVal] of Object.entries(val)) el.dataset[dKey] = dVal;
+      } else if (key === 'style' && typeof val === 'object') {
+        Object.assign(el.style, val);
+      } else {
+        el[key] = val;
+      }
+    }
+    children.forEach(child => {
+      if (typeof child === 'string') el.appendChild(document.createTextNode(child));
+      else if (child) el.appendChild(child);
+    });
+    return el;
+  }
+
+  function createSvgIcon(pathData) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", pathData);
+    svg.appendChild(path);
+    return svg;
+  }
+
   function captureTitle() {
-    if (!document.title || !window.navigation || !window.navigation.currentEntry) return;
+    if (!document.title) return;
     try {
-      const key = window.navigation.currentEntry.key;
-      sessionStorage.setItem('wg_title_' + key, document.title);
+      sessionStorage.setItem('wg_current_title', document.title);
     } catch (e) { }
   }
-  if (document.readyState === 'complete') captureTitle();
   window.addEventListener('load', captureTitle);
   window.addEventListener('visibilitychange', captureTitle);
   const titleObserver = new MutationObserver(captureTitle);
@@ -57,7 +83,7 @@
     .wg-f-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
     
     .wg-history-menu {
-      position: absolute; left: 0; background: rgba(30, 30, 30, 0.95); backdrop-filter: blur(15px);
+      position: absolute; left: 0; background: rgba(98, 98, 98, 0.1); backdrop-filter: blur(12px) saturate(6);
       border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 5px; 
       display: none; flex-direction: column; min-width: 220px; width: -webkit-fill-available; max-width: 280px;
       color: white; font-family: sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -77,7 +103,7 @@
     }
 
     .wg-hist-item { 
-        padding: 8px; cursor: pointer; border-radius: 4px; font-size: 12px; 
+        padding: 8px; cursor: pointer; border-radius: 4px; font-size: 12px; color: #e3e3e3;
         display:flex; flex-direction:column; gap:2px; border-bottom: 1px solid rgba(255,255,255,0.05);
     }
     .wg-hist-item:last-child { border-bottom: none; }
@@ -89,28 +115,29 @@
     .wg-hist-disabled { padding: 8px; color: #efefef; font-size: 12px; font-style: italic; text-align: center; }
   `;
 
-  const icons = {
-    back: `<svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>`,
-    forward: `<svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>`,
-    reload: `<svg viewBox="0 0 24 24"><path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/></svg>`,
-    home: `<svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>`,
-    close: `<svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`
+  const iconPaths = {
+    back: "M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z",
+    forward: "M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z",
+    reload: "M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z",
+    home: "M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z",
+    close: "M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
   };
 
   const styleEl = document.createElement('style');
   styleEl.textContent = css;
   document.head.appendChild(styleEl);
 
-  const root = document.createElement('div');
-  root.id = ROOT_ID;
-  root.innerHTML = `
-    <button class="wg-f-btn" id="wgf-back" title="Back">${icons.back}</button>
-    <button class="wg-f-btn" id="wgf-forward" title="Forward">${icons.forward}</button>
-    <button class="wg-f-btn" id="wgf-reload" title="Reload">${icons.reload}</button>
-    <button class="wg-f-btn" id="wgf-home" title="Home">${icons.home}</button>
-    <button class="wg-f-btn" id="wgf-close" title="Close">${icons.close}</button>
-    <div class="wg-history-menu" id="wgf-menu"></div>
-  `;
+  const btnBack = mkEl('button', { className: 'wg-f-btn', id: 'wgf-back', title: 'Back' }, [createSvgIcon(iconPaths.back)]);
+  const btnForward = mkEl('button', { className: 'wg-f-btn', id: 'wgf-forward', title: 'Forward' }, [createSvgIcon(iconPaths.forward)]);
+  const btnReload = mkEl('button', { className: 'wg-f-btn', id: 'wgf-reload', title: 'Reload' }, [createSvgIcon(iconPaths.reload)]);
+  const btnHome = mkEl('button', { className: 'wg-f-btn', id: 'wgf-home', title: 'Home' }, [createSvgIcon(iconPaths.home)]);
+  const btnClose = mkEl('button', { className: 'wg-f-btn', id: 'wgf-close', title: 'Close' }, [createSvgIcon(iconPaths.close)]);
+  const menu = mkEl('div', { className: 'wg-history-menu', id: 'wgf-menu' });
+
+  const root = mkEl('div', { id: ROOT_ID }, [
+    btnBack, btnForward, btnReload, btnHome, btnClose, menu
+  ]);
+
   document.body.appendChild(root);
 
   function resetActivity() {
@@ -121,26 +148,26 @@
   window.addEventListener('scroll', resetActivity);
   resetActivity();
 
-  document.getElementById('wgf-back').onclick = () => history.back();
-  document.getElementById('wgf-forward').onclick = () => history.forward();
-  document.getElementById('wgf-reload').onclick = () => location.reload();
+  btnBack.onclick = () => history.back();
+  btnForward.onclick = () => history.forward();
+  btnReload.onclick = () => location.reload();
 
-  // --- HOME ACTION ---
-  document.getElementById('wgf-home').onclick = () => {
+  btnHome.onclick = () => {
     captureTitle();
     location.href = HOME_URL;
   };
 
-  document.getElementById('wgf-close').onclick = () => window.close();
+  btnClose.onclick = () => window.close();
 
-  const menu = document.getElementById('wgf-menu');
   function getPrettyUrl(urlStr) {
     try { const u = new URL(urlStr); return u.hostname.replace('www.', '') + (u.pathname.length > 1 ? u.pathname : ''); }
     catch { return 'Page'; }
   }
+  
   function hideHistoryMenu() {
     menu.style.display = 'none';
   }
+  
   document.addEventListener('click', (e) => {
     if (
       menu.style.display === 'flex' &&
@@ -153,38 +180,49 @@
   });
   menu.addEventListener('click', (e) => e.stopPropagation());
 
-  function showHistory(isBack) {
-    menu.innerHTML = '';
-    const nav = window.navigation;
-    if (!nav) { menu.innerHTML = `<div class="wg-hist-disabled">Browser not supported</div>`; menu.style.display = 'flex'; return; }
+  let historyDirection = 'back'; 
 
-    const entries = nav.entries();
-    const currentIdx = nav.currentEntry ? nav.currentEntry.index : 0;
-    let list = isBack ? entries.slice(0, currentIdx).reverse() : entries.slice(currentIdx + 1);
+  function requestHistory(direction) {
+    historyDirection = direction;
+    window.postMessage({ __webgation: true, type: 'getHistory' }, '*');
+  }
+
+  function renderHistoryMenu(data) {
+    menu.replaceChildren();
+    
+    const { stack, currentIdx } = data || { stack: [], currentIdx: 0 };
+    const isBack = historyDirection === 'back';
+    
+    let list = [];
+    if (isBack) {
+      list = stack.slice(0, currentIdx).reverse();
+    } else {
+      list = stack.slice(currentIdx + 1);
+    }
 
     if (list.length === 0) {
-      menu.innerHTML = `<div class="wg-hist-disabled">No history</div>`;
+      const msg = mkEl('div', { className: 'wg-hist-disabled', textContent: 'No history' });
+      menu.appendChild(msg);
     } else {
       list.slice(0, 10).forEach((entry, i) => {
-        const step = isBack ? -(i + 1) : (i + 1);
-
-        let displayTitle = sessionStorage.getItem('wg_title_' + entry.key);
-        if (!displayTitle && entry.name) displayTitle = entry.name;
-        if (!displayTitle) displayTitle = getPrettyUrl(entry.url);
-
+        let delta = isBack ? -(i + 1) : (i + 1);
+        let displayTitle = entry.title || getPrettyUrl(entry.url);
         const displayUrl = getPrettyUrl(entry.url);
 
-        const d = document.createElement('div');
-        d.className = 'wg-hist-item';
-        d.innerHTML = `
-            <div class="wg-h-row">
-                <div class="wg-h-title">${displayTitle}</div>
-                <div class="wg-h-idx">${step > 0 ? '+' + step : step}</div>
-            </div>
-            <div class="wg-h-url">${displayUrl}</div>
-        `;
-        d.onclick = (e) => { e.stopPropagation(); nav.traverseTo(entry.key); menu.style.display = 'none'; };
-        menu.appendChild(d);
+        const row = mkEl('div', { className: 'wg-h-row' }, [
+          mkEl('div', { className: 'wg-h-title', textContent: displayTitle }),
+          mkEl('div', { className: 'wg-h-idx', textContent: delta > 0 ? '+' + delta : delta })
+        ]);
+        
+        const urlRow = mkEl('div', { className: 'wg-h-url', textContent: displayUrl });
+        const item = mkEl('div', { className: 'wg-hist-item' }, [row, urlRow]);
+
+        item.onclick = (e) => { 
+          e.stopPropagation(); 
+          history.go(delta);
+          menu.style.display = 'none'; 
+        };
+        menu.appendChild(item);
       });
     }
 
@@ -194,8 +232,8 @@
     else { menu.style.top = '120%'; menu.style.bottom = 'auto'; }
   }
 
-  document.getElementById('wgf-back').oncontextmenu = (e) => { e.preventDefault(); showHistory(true); };
-  document.getElementById('wgf-forward').oncontextmenu = (e) => { e.preventDefault(); showHistory(false); };
+  btnBack.oncontextmenu = (e) => { e.preventDefault(); requestHistory('back'); };
+  btnForward.oncontextmenu = (e) => { e.preventDefault(); requestHistory('forward'); };
 
   let isDragging = false, startX, startY, initialLeft, initialTop;
   root.addEventListener('mousedown', (e) => {
@@ -221,14 +259,18 @@
 
   window.postMessage({ __webgation: true, type: 'getSettings' }, '*');
   window.addEventListener('message', (e) => {
-    if (e.data && e.data.type === 'receiveSettings' && e.data.payload.position) {
+    if (!e.data || e.data.__webgation !== true) return;
+    
+    if (e.data.type === 'receiveSettings' && e.data.payload.position) {
       root.style.left = e.data.payload.position.x + 'px';
       root.style.right = `auto`;
       root.style.top = e.data.payload.position.y + 'px';
       root.style.bottom = `auto`;
-
     }
-    if (e.data && e.data.type === 'destroyUI') {
+    if (e.data.type === 'receiveHistory') {
+      renderHistoryMenu(e.data.payload);
+    }
+    if (e.data.type === 'destroyUI') {
       root.remove(); styleEl.remove(); titleObserver.disconnect();
       window.__webgation_floating_active = false;
     }
