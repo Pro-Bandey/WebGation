@@ -1,3 +1,4 @@
+
 (function () {
   const STORAGE_KEY = 'webgation_settings';
 
@@ -62,17 +63,6 @@
       }
       else if (msg.type === 'openHome') {
         chrome.runtime.sendMessage({ type: 'open_new_tab' });
-      }
-      // NEW: Bridge for History
-      else if (msg.type === 'getHistory') {
-        chrome.runtime.sendMessage({ type: 'get_tab_history' }, (response) => {
-           window.postMessage({ 
-             __webgation: true, 
-             type: 'receiveHistory', 
-             id: msg.id, // match request ID
-             payload: response 
-           }, '*');
-        });
       }
     } catch (e) {
       console.log("webgation: Connection lost (extension reloaded). Please refresh the page.");

@@ -89,9 +89,18 @@
       animation: wgFadeIn 0.15s ease-out;
     }
     @keyframes wgFadeIn { from{opacity:0;transform:scale(0.95);} to{opacity:1;transform:scale(1);} }
-     .wg-history-menu::-webkit-scrollbar { width: 3px; height: 3px; }
-    .wg-history-menu::-webkit-scrollbar-track { background: transparent; }
-    .wg-history-menu::-webkit-scrollbar-thumb { background:#ffffff; border-radius: 5px; cursor: grab; }
+     .wg-history-menu::-webkit-scrollbar {
+      width: 3px;
+      height: 3px;
+    }
+    .wg-history-menu::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .wg-history-menu::-webkit-scrollbar-thumb {
+      background:#ffffff;
+      border-radius: 5px;
+      cursor: grab;
+    }
       
     .wg-hist-item {
       padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 13px;
@@ -150,60 +159,42 @@
   document.getElementById('wg-back').onclick = () => history.back();
   document.getElementById('wg-forward').onclick = () => history.forward();
   document.getElementById('wg-reload').onclick = () => location.reload();
-  document.getElementById('wg-home').onclick = () => { captureTitle(); location.href = HOME_URL; };
+
+  document.getElementById('wg-home').onclick = () => {
+    captureTitle();
+    location.href = HOME_URL;
+  };
+
   document.getElementById('wg-close').onclick = () => window.close();
 
   const menu = document.getElementById('wg-menu');
+
   function getPrettyUrl(urlStr) {
     try { const u = new URL(urlStr); return u.hostname.replace('www.', '') + (u.pathname.length > 1 ? u.pathname : ''); }
     catch { return 'External Page'; }
   }
 
-  // NEW: Fetch history from Background via Content Script
   function showHistory(e, direction) {
     e.preventDefault();
-    menu.innerHTML = '<div class="wg-hist-disabled">Loading...</div>';
-    menu.style.display = 'flex';
-    
-    // Initial position
-    const rect = e.target.closest('.wg-sidebar').getBoundingClientRect();
-    menu.style.top = Math.max(10, rect.top) + 'px';
-    const isBack = direction === 'back';
-    if (isBack) { menu.style.left = '60px'; menu.style.right = 'auto'; }
-    else { menu.style.right = '60px'; menu.style.left = 'auto'; }
-
-    const reqId = Math.random().toString(36);
-    const listener = (ev) => {
-        if (!ev.data || ev.data.type !== 'receiveHistory' || ev.data.id !== reqId) return;
-        window.removeEventListener('message', listener);
-        renderHistory(ev.data.payload, direction, isBack);
-    };
-    window.addEventListener('message', listener);
-    window.postMessage({ __webgation: true, type: 'getHistory', id: reqId }, '*');
-  }
-
-  function renderHistory(data, direction, isBack) {
     menu.innerHTML = '';
-    const { stack, currentIndex } = data;
+    const nav = window.navigation;
+    if (!nav) { menu.innerHTML = `<div class="wg-hist-disabled">Browser not supported</div>`; menu.style.display = 'flex'; return; }
 
-    if (!stack || stack.length === 0) {
-        menu.innerHTML = `<div class="wg-hist-disabled">No history data</div>`;
-        return;
-    }
-
-    let list = [];
-    if (isBack) {
-        list = stack.slice(0, currentIndex).reverse();
-    } else {
-        list = stack.slice(currentIndex + 1);
-    }
+    const entries = nav.entries();
+    const currentIdx = nav.currentEntry ? nav.currentEntry.index : 0;
+    const isBack = direction === 'back';
+    let list = isBack ? entries.slice(0, currentIdx).reverse() : entries.slice(currentIdx + 1);
 
     if (list.length === 0) {
       menu.innerHTML = `<div class="wg-hist-disabled">No ${isBack ? 'back' : 'forward'} history</div>`;
     } else {
       list.slice(0, 10).forEach((entry, i) => {
         const step = isBack ? -(i + 1) : (i + 1);
-        const displayTitle = entry.title || getPrettyUrl(entry.url);
+
+        let displayTitle = sessionStorage.getItem('wg_title_' + entry.key);
+        if (!displayTitle && entry.name) displayTitle = entry.name;
+        if (!displayTitle) displayTitle = getPrettyUrl(entry.url);
+
         const displayUrl = getPrettyUrl(entry.url);
 
         const item = document.createElement('div');
@@ -215,19 +206,22 @@
             </div>
             <div class="wg-h-url">${displayUrl}</div>
         `;
-        // Use direct navigation
         item.onclick = (ev) => {
           ev.stopPropagation();
-          location.href = entry.url;
+          nav.traverseTo(entry.key);
           menu.style.display = 'none';
         };
         menu.appendChild(item);
       });
     }
-    
-    // Reposition adjust
+
+    menu.style.display = 'flex';
+    const rect = e.target.closest('.wg-sidebar').getBoundingClientRect();
+    menu.style.top = Math.max(10, rect.top) + 'px';
     const menuRect = menu.getBoundingClientRect();
     if (menuRect.bottom > window.innerHeight) { menu.style.top = 'auto'; menu.style.bottom = '10px'; }
+    if (isBack) { menu.style.left = '60px'; menu.style.right = 'auto'; }
+    else { menu.style.right = '60px'; menu.style.left = 'auto'; }
   }
 
   document.getElementById('wg-back').oncontextmenu = (e) => showHistory(e, 'back');

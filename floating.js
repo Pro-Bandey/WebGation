@@ -6,7 +6,6 @@
   const HOME_URL = "https://online-homepage.vercel.app/";
   let hideTimer;
 
-  // Only used for saving current title locally if needed, but history comes from BG now
   function captureTitle() {
     if (!document.title || !window.navigation || !window.navigation.currentEntry) return;
     try {
@@ -64,9 +63,18 @@
       color: white; font-family: sans-serif; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       max-height: 250px; overflow-y: auto;
     }
-    .wg-history-menu::-webkit-scrollbar { width: 2px; height: 2px; }
-    .wg-history-menu::-webkit-scrollbar-track { background: transparent; }
-    .wg-history-menu::-webkit-scrollbar-thumb { background:#ffffff; border-radius: 5px; cursor: grab; }
+    .wg-history-menu::-webkit-scrollbar {
+      width: 2px;
+      height: 2px;
+    }
+    .wg-history-menu::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .wg-history-menu::-webkit-scrollbar-thumb {
+      background:#ffffff;
+      border-radius: 5px;
+      cursor: grab;
+    }
 
     .wg-hist-item { 
         padding: 8px; cursor: pointer; border-radius: 4px; font-size: 12px; 
@@ -116,7 +124,13 @@
   document.getElementById('wgf-back').onclick = () => history.back();
   document.getElementById('wgf-forward').onclick = () => history.forward();
   document.getElementById('wgf-reload').onclick = () => location.reload();
-  document.getElementById('wgf-home').onclick = () => { captureTitle(); location.href = HOME_URL; };
+
+  // --- HOME ACTION ---
+  document.getElementById('wgf-home').onclick = () => {
+    captureTitle();
+    location.href = HOME_URL;
+  };
+
   document.getElementById('wgf-close').onclick = () => window.close();
 
   const menu = document.getElementById('wgf-menu');
@@ -124,60 +138,40 @@
     try { const u = new URL(urlStr); return u.hostname.replace('www.', '') + (u.pathname.length > 1 ? u.pathname : ''); }
     catch { return 'Page'; }
   }
-  function hideHistoryMenu() { menu.style.display = 'none'; }
-  
+  function hideHistoryMenu() {
+    menu.style.display = 'none';
+  }
   document.addEventListener('click', (e) => {
-    if (menu.style.display === 'flex' && !e.target.closest('.wg-history-menu') &&
-      !e.target.closest('#wgf-back') && !e.target.closest('#wgf-forward')) {
+    if (
+      menu.style.display === 'flex' &&
+      !e.target.closest('.wg-history-menu') &&
+      !e.target.closest('#wgf-back') &&
+      !e.target.closest('#wgf-forward')
+    ) {
       hideHistoryMenu();
     }
   });
   menu.addEventListener('click', (e) => e.stopPropagation());
 
-  // NEW: Fetch history from Background via Content Script
   function showHistory(isBack) {
-    menu.innerHTML = '<div class="wg-hist-disabled">Loading...</div>';
-    menu.style.display = 'flex';
-    
-    // Position immediately
-    const rootRect = root.getBoundingClientRect();
-    if (rootRect.bottom + 200 > window.innerHeight) { menu.style.top = 'auto'; menu.style.bottom = '120%'; }
-    else { menu.style.top = '120%'; menu.style.bottom = 'auto'; }
-
-    const reqId = Math.random().toString(36);
-    
-    const listener = (e) => {
-        if (!e.data || e.data.type !== 'receiveHistory' || e.data.id !== reqId) return;
-        window.removeEventListener('message', listener);
-        renderHistory(e.data.payload, isBack);
-    };
-    window.addEventListener('message', listener);
-    window.postMessage({ __webgation: true, type: 'getHistory', id: reqId }, '*');
-  }
-
-  function renderHistory(data, isBack) {
     menu.innerHTML = '';
-    const { stack, currentIndex } = data;
-    
-    if (!stack || stack.length === 0) {
-        menu.innerHTML = `<div class="wg-hist-disabled">No history data</div>`;
-        return;
-    }
+    const nav = window.navigation;
+    if (!nav) { menu.innerHTML = `<div class="wg-hist-disabled">Browser not supported</div>`; menu.style.display = 'flex'; return; }
 
-    let list = [];
-    // Slice based on current index tracked in background
-    if (isBack) {
-        list = stack.slice(0, currentIndex).reverse();
-    } else {
-        list = stack.slice(currentIndex + 1);
-    }
+    const entries = nav.entries();
+    const currentIdx = nav.currentEntry ? nav.currentEntry.index : 0;
+    let list = isBack ? entries.slice(0, currentIdx).reverse() : entries.slice(currentIdx + 1);
 
     if (list.length === 0) {
-      menu.innerHTML = `<div class="wg-hist-disabled">No ${isBack ? 'back' : 'forward'} history</div>`;
+      menu.innerHTML = `<div class="wg-hist-disabled">No history</div>`;
     } else {
       list.slice(0, 10).forEach((entry, i) => {
         const step = isBack ? -(i + 1) : (i + 1);
-        const displayTitle = entry.title || getPrettyUrl(entry.url);
+
+        let displayTitle = sessionStorage.getItem('wg_title_' + entry.key);
+        if (!displayTitle && entry.name) displayTitle = entry.name;
+        if (!displayTitle) displayTitle = getPrettyUrl(entry.url);
+
         const displayUrl = getPrettyUrl(entry.url);
 
         const d = document.createElement('div');
@@ -189,11 +183,15 @@
             </div>
             <div class="wg-h-url">${displayUrl}</div>
         `;
-        // Use direct navigation for cross-origin support
-        d.onclick = (e) => { e.stopPropagation(); location.href = entry.url; menu.style.display = 'none'; };
+        d.onclick = (e) => { e.stopPropagation(); nav.traverseTo(entry.key); menu.style.display = 'none'; };
         menu.appendChild(d);
       });
     }
+
+    menu.style.display = 'flex';
+    const rootRect = root.getBoundingClientRect();
+    if (rootRect.bottom + 200 > window.innerHeight) { menu.style.top = 'auto'; menu.style.bottom = '120%'; }
+    else { menu.style.top = '120%'; menu.style.bottom = 'auto'; }
   }
 
   document.getElementById('wgf-back').oncontextmenu = (e) => { e.preventDefault(); showHistory(true); };
@@ -228,6 +226,7 @@
       root.style.right = `auto`;
       root.style.top = e.data.payload.position.y + 'px';
       root.style.bottom = `auto`;
+
     }
     if (e.data && e.data.type === 'destroyUI') {
       root.remove(); styleEl.remove(); titleObserver.disconnect();

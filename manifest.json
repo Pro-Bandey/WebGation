@@ -36,13 +36,7 @@
   "background": {
     "service_worker": "background.js"
   },
-  "permissions": [
-    "storage",
-    "activeTab",
-    "scripting",
-    "history",
-    "webNavigation"
-  ],
+  "permissions": ["storage", "activeTab", "scripting"],
   "host_permissions": ["<all_urls>"],
   "incognito": "split",
   "web_accessible_resources": [
