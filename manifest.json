@@ -33,9 +33,6 @@
       "run_at": "document_idle"
     }
   ],
-  "background": {
-    "service_worker": "background.js"
-  },
   "permissions": [
     "storage",
     "activeTab",
@@ -50,5 +47,8 @@
       "resources": ["static.js", "floating.js"],
       "matches": ["<all_urls>"]
     }
-  ]
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
 }
