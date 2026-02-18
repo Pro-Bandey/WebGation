@@ -81,13 +81,19 @@ const UNINSTALL_URL = "https://github.com/Pro-Bandey/WebGation/issues/new/choose
 
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
-    chrome.tabs.create({ url: INSTALL_URL, active: true }).catch(console.warn);
+    chrome.tabs.create({
+      url: INSTALL_URL,
+      active: true
+    });
   }
-  chrome.runtime.setUninstallURL(UNINSTALL_URL).catch((err) => {
-    console.warn("Could not set uninstall URL:", err);
+
+  chrome.runtime.setUninstallURL(UNINSTALL_URL, () => {
+    if (chrome.runtime.lastError) {
+      console.warn("Could not set uninstall URL:", chrome.runtime.lastError);
+    }
   });
 });
 
 chrome.runtime.onStartup.addListener(() => {
-  chrome.runtime.setUninstallURL(UNINSTALL_URL).catch(() => { });
+  chrome.runtime.setUninstallURL(UNINSTALL_URL, () => {});
 });
