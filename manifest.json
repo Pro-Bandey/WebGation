@@ -3,7 +3,7 @@
   "name": "WebGation",
   "short_name": "WebGation",
   "version": "5.57",
-  "version_name": "v5.57_build_57",
+  "version_name": "v5.65_build_65",
   "author": "MicroResearch Corporation®",
   "description": "WebGation is a lightweight, high-performance Chrome Extension designed to enhance your browsing speed.",
   "minimum_chrome_version": "130",
@@ -23,7 +23,7 @@
       "16": "./src/16.png",
       "48": "./src/48.png",
       "128": "./src/128.png",
-      "256": "./src//logo.png"
+      "256": "./src/logo.png"
     }
   },
   "content_scripts": [
