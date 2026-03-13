@@ -18,7 +18,6 @@
   "action": {
     "default_popup": "popup.html",
     "default_title": "WebGation",
-    "browser_style": true,
     "default_icon": {
       "16": "./src/16.png",
       "48": "./src/48.png",
@@ -49,6 +48,6 @@
     }
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "./background.js"
   }
 }
