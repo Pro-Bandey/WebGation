@@ -1,12 +1,12 @@
 const INSTALL_URL = "https://github.com/Pro-Bandey/WebGation/wiki/";
-const UNINSTALL_URL = "https://github.com/Pro-Bandey/WebGation/issues/new/choose/";
+const UNINSTALL_URL = "https://github.com/Pro-Bandey/WebGation";
 
 const tabHistory = {};
 
 // Helper function to keep code DRY when initializing state
 const getOrCreateTabHistory = (tabId) => {
   if (!tabHistory[tabId]) {
-    tabHistory[tabId] = { stack:[], currentIdx: -1 };
+    tabHistory[tabId] = { stack: [], currentIdx: -1 };
   }
   return tabHistory[tabId];
 };
@@ -75,7 +75,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       if (tabId) {
         sendResponse(getOrCreateTabHistory(tabId));
       } else {
-        sendResponse({ stack:[], currentIdx: -1 });
+        sendResponse({ stack: [], currentIdx: -1 });
       }
       break;
 

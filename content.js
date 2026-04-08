@@ -74,12 +74,12 @@
     try {
       if (msg.type === 'getSettings') {
         const settings = await loadSettings();
-        const siteSettings = settings[siteKey] || { enabled: true, mode: 'static', position: null };
+        const siteSettings = settings[siteKey] || { enabled: true, mode: 'floating', position: null };
         window.postMessage({ __webgation: true, type: 'receiveSettings', payload: siteSettings }, '*');
       } 
       else if (msg.type === 'savePosition') {
         const settings = await loadSettings();
-        settings[siteKey] = settings[siteKey] || { enabled: true, mode: 'static' };
+        settings[siteKey] = settings[siteKey] || { enabled: true, mode: 'floating' };
         settings[siteKey].position = msg.payload;
         await chrome.storage.local.set({ [STORAGE_KEY]: settings });
       }
@@ -112,7 +112,7 @@
     reportNavigation();
 
     const settings = await loadSettings();
-    const siteSettings = settings[getSiteKey()] || { enabled: true, mode: 'static' };
+    const siteSettings = settings[getSiteKey()] || { enabled: true, mode: 'floating' };
     
     if (siteSettings.enabled) {
       injectModeScript(siteSettings.mode);
