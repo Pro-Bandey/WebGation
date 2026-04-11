@@ -2,7 +2,7 @@
 
 **WebGation** is a lightweight, high-performance Chrome Extension designed to enhance your browsing speed. It provides intelligent, context-aware navigation controls in two distinct modes: **Static** (sleek sidebars) and **Floating** (draggable pill).
 
-![Static Mode Preview](./src/128.png)
+![Static Mode Preview](./chrome/icons/logo.png)
 
 ## ✨ Features
 
