@@ -1,15 +1,17 @@
+const extApi = typeof browser !== "undefined" ? browser : chrome;
+
 
 (function () {
   const STORAGE_KEY = 'webgation_settings';
 
   function isContextValid() {
-    return !!chrome.runtime?.id;
+    return !!extApi.runtime?.id;
   }
 
   async function loadSettings() {
     if (!isContextValid()) return {}; 
     try {
-      const data = await chrome.storage.local.get(STORAGE_KEY);
+      const data = await extApi.storage.local.get(STORAGE_KEY);
       return data[STORAGE_KEY] || {};
     } catch (e) {
       return {}; 
@@ -27,8 +29,8 @@
   function injectModeScript(mode) {
     if (!isContextValid()) return;
     
-    const file = mode === 'floating' ? 'floating.js' : 'static.js';
-    const url = chrome.runtime.getURL(file);
+    const file = mode === 'floating' ? 'js/floating.js' : 'js/static.js';
+    const url = extApi.runtime.getURL(file);
     
     removeInjectedUI();
     const s = document.createElement('script');
@@ -48,7 +50,7 @@
     
     if (window.navigation && window.navigation.currentEntry) {
       const entry = window.navigation.currentEntry;
-      chrome.runtime.sendMessage({
+      extApi.runtime.sendMessage({
         type: 'report_nav',
         payload: {
           url: location.href,
@@ -81,15 +83,15 @@
         const settings = await loadSettings();
         settings[siteKey] = settings[siteKey] || { enabled: true, mode: 'floating' };
         settings[siteKey].position = msg.payload;
-        await chrome.storage.local.set({ [STORAGE_KEY]: settings });
+        await extApi.storage.local.set({ [STORAGE_KEY]: settings });
       }
       else if (msg.type === 'openHome') {
-        chrome.runtime.sendMessage({ type: 'open_new_tab' });
+        extApi.runtime.sendMessage({ type: 'open_new_tab' });
       }
       else if (msg.type === 'getHistory') {
         reportNavigation(); 
         
-        chrome.runtime.sendMessage({ type: 'get_tab_history' }, (response) => {
+        extApi.runtime.sendMessage({ type: 'get_tab_history' }, (response) => {
           window.postMessage({ __webgation: true, type: 'receiveHistory', payload: response }, '*');
         });
       }
@@ -99,7 +101,7 @@
   });
 
   if (isContextValid()) {
-    chrome.runtime.onMessage.addListener((message) => {
+    extApi.runtime.onMessage.addListener((message) => {
       if (isContextValid() && message.type === 'settingsUpdated') {
         init();
       }

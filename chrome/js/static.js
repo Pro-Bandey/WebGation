@@ -215,7 +215,7 @@
     const { stack, currentIdx } = data || { stack: [], currentIdx: 0 };
     const direction = historyRequestOrigin ? historyRequestOrigin.direction : 'back';
     const isBack = direction === 'back';
-    
+
     let list = [];
     if (isBack) {
       list = stack.slice(0, currentIdx).reverse();
@@ -224,9 +224,9 @@
     }
 
     if (list.length === 0) {
-      const msg = mkEl('div', { 
-        className: 'wg-hist-disabled', 
-        textContent: `No ${isBack ? 'back' : 'forward'} history` 
+      const msg = mkEl('div', {
+        className: 'wg-hist-disabled',
+        textContent: `No ${isBack ? 'back' : 'forward'} history`
       });
       menu.appendChild(msg);
     } else {
@@ -253,12 +253,12 @@
 
     menu.style.display = 'flex';
     if (historyRequestOrigin) {
-        const rect = historyRequestOrigin.target.closest('.wg-sidebar').getBoundingClientRect();
-        menu.style.top = Math.max(10, rect.top) + 'px';
-        const menuRect = menu.getBoundingClientRect();
-        if (menuRect.bottom > window.innerHeight) { menu.style.top = 'auto'; menu.style.bottom = '10px'; }
-        if (isBack) { menu.style.left = '60px'; menu.style.right = 'auto'; }
-        else { menu.style.right = '60px'; menu.style.left = 'auto'; }
+      const rect = historyRequestOrigin.target.closest('.wg-sidebar').getBoundingClientRect();
+      menu.style.top = Math.max(10, rect.top) + 'px';
+      const menuRect = menu.getBoundingClientRect();
+      if (menuRect.bottom > window.innerHeight) { menu.style.top = 'auto'; menu.style.bottom = '10px'; }
+      if (isBack) { menu.style.left = '60px'; menu.style.right = 'auto'; }
+      else { menu.style.right = '60px'; menu.style.left = 'auto'; }
     }
   }
 
@@ -268,7 +268,7 @@
 
   window.addEventListener('message', (e) => {
     if (!e.data || e.data.__webgation !== true) return;
-    
+
     if (e.data.type === 'receiveHistory') {
       renderHistoryMenu(e.data.payload);
     }

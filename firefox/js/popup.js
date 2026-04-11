@@ -1,0 +1,133 @@
+const extApi = typeof browser !== "undefined" ? browser : chrome;
+const enabledToggle = document.getElementById('enabledToggle');
+const modeSelect = document.getElementById('modeSelect');
+const siteOriginEl = document.getElementById('siteOrigin');
+const siteOriginLink = document.getElementById('siteOriginLink');
+const posInfo = document.getElementById('posInfo');
+const resetPosBtn = document.getElementById('resetPos');
+const exportBtn = document.getElementById('exportBtn');
+const importBtn = document.getElementById('importBtn');
+const applyImportBtn = document.getElementById('applyImport');
+const jsonArea = document.getElementById('jsonArea');
+const clearSiteBtn = document.getElementById('clearSite');
+const statusEl = document.getElementById('status');
+
+let currentOrigin = null;
+let settings = {};
+
+function showStatus(msg, timeout = 2500) {
+  statusEl.textContent = msg;
+  if (timeout) setTimeout(() => statusEl.textContent = '', timeout);
+}
+
+async function getActiveTabOrigin() {
+  const [tab] = await extApi.tabs.query({ active: true, currentWindow: true });
+  if (!tab || !tab.url) return null;
+  try {
+    const url = new URL(tab.url);
+    return url.origin;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function loadSettings() {
+  currentOrigin = await getActiveTabOrigin();
+  siteOriginEl.textContent = currentOrigin || 'Unknown';
+  const data = await extApi.storage.local.get('webgation_settings');
+  settings = data.webgation_settings || {};
+  const siteKey = currentOrigin || '__unknown__';
+  const siteSettings = settings[siteKey] || { enabled: true, mode: 'floating', position: null };
+  enabledToggle.checked = !!siteSettings.enabled;
+  modeSelect.value = siteSettings.mode || 'floating';
+  if (currentOrigin) {
+    const aboutUrl =
+      'https://www.google.com/search?q=' +
+      encodeURIComponent('About ' + currentOrigin) +
+      '&tbm=ilp&ctx=extApi';
+
+    siteOriginLink.href = aboutUrl;
+  } else {
+    siteOriginLink.removeAttribute('href');
+  }
+  if (siteSettings.position) {
+    posInfo.textContent = `x: ${siteSettings.position.x}, y: ${siteSettings.position.y}`;
+  } else {
+    posInfo.textContent = 'Not set';
+  }
+}
+
+async function saveSiteSettings() {
+  if (!currentOrigin) return;
+  const siteKey = currentOrigin;
+  settings[siteKey] = settings[siteKey] || {};
+  settings[siteKey].enabled = enabledToggle.checked;
+  settings[siteKey].mode = modeSelect.value;
+  await extApi.storage.local.set({ webgation_settings: settings });
+  showStatus('Saved');
+  const [tab] = await extApi.tabs.query({ active: true, currentWindow: true });
+  if (tab && tab.id) {
+    extApi.tabs.sendMessage(tab.id, { type: 'settingsUpdated' }).catch(() => { });
+  }
+}
+
+enabledToggle.addEventListener('change', saveSiteSettings);
+modeSelect.addEventListener('change', saveSiteSettings);
+
+resetPosBtn.addEventListener('click', async () => {
+  if (!currentOrigin) return;
+  const siteKey = currentOrigin;
+  if (settings[siteKey]) {
+    delete settings[siteKey].position;
+    await extApi.storage.local.set({ webgation_settings: settings });
+    posInfo.textContent = 'Not set';
+    showStatus('Position reset');
+    const [tab] = await extApi.tabs.query({ active: true, currentWindow: true });
+    if (tab && tab.id) extApi.tabs.sendMessage(tab.id, { type: 'settingsUpdated' }).catch(() => { });
+  }
+});
+
+exportBtn.addEventListener('click', async () => {
+  const data = await extApi.storage.local.get('webgation_settings');
+  const json = JSON.stringify(data.webgation_settings || {}, null, 2);
+  jsonArea.value = json;
+  showStatus('Exported to text area');
+});
+
+importBtn.addEventListener('click', () => {
+  jsonArea.focus();
+});
+
+applyImportBtn.addEventListener('click', async () => {
+  const text = jsonArea.value.trim();
+  if (!text) { showStatus('No JSON provided'); return; }
+  try {
+    const parsed = JSON.parse(text);
+    if (typeof parsed !== 'object' || parsed === null) throw new Error('Invalid JSON');
+    await extApi.storage.local.set({ webgation_settings: parsed });
+    settings = parsed;
+    await loadSettings();
+    showStatus('Imported settings');
+    const [tab] = await extApi.tabs.query({ active: true, currentWindow: true });
+    if (tab && tab.id) extApi.tabs.sendMessage(tab.id, { type: 'settingsUpdated' }).catch(() => { });
+  } catch (e) {
+    showStatus('Invalid JSON: ' + e.message);
+  }
+});
+
+clearSiteBtn.addEventListener('click', async () => {
+  if (!currentOrigin) return;
+  const siteKey = currentOrigin;
+  if (settings[siteKey]) {
+    delete settings[siteKey];
+    await extApi.storage.local.set({ webgation_settings: settings });
+    await loadSettings();
+    showStatus('Site settings cleared');
+    const [tab] = await extApi.tabs.query({ active: true, currentWindow: true });
+    if (tab && tab.id) extApi.tabs.sendMessage(tab.id, { type: 'settingsUpdated' }).catch(() => { });
+  } else {
+    showStatus('No settings for this site');
+  }
+});
+
+document.addEventListener('DOMContentLoaded', loadSettings);

@@ -25,13 +25,20 @@
 
 ---
 
-## 🛠️ Installation (Developer Mode)
+## 🛠️ Installation 
+
+### Chromium Based Browsers
 
 1.  **Download/Clone** this repository to your local machine.
 2.  Open your browser and navigate to `chrome://extensions/`.
 3.  Enable **Developer mode** (usually a toggle in the top right corner).
 4.  Click **Load unpacked** and select the folder containing the extension files.
 5.  webgation is now ready! Upon installation, you will be greeted by the [Welcome Page](https://ttiny.ga/tion).
+
+
+### FireFox Browser
+
+- [Install]()
 
 ---
 
@@ -51,27 +58,12 @@
 
 ---
 
-## 📂 Project Structure
-
-- `manifest.json`: Extension configuration (Manifest V3).
-- `background.js`: Handles installation/uninstallation and system-level tab creation.
-- `content.js`: The bridge between the browser and the page; manages site-specific settings.
-- `static.js`: The logic and styling for the sidebar-based UI.
-- `floating.js`: The logic and styling for the draggable pill UI.
-- `popup.html/js/css`: The settings menu accessible from the browser toolbar.
-
----
 
 ## ⚙️ Technical Details
 
 - **History Management**: Uses the `Navigation API` to access the tab's specific `NavigationHistoryEntry` stack. 
 - **Title Syncing**: Employs `sessionStorage` and `MutationObserver` to map history keys to page titles, ensuring the history menu is readable even on complex Single Page Applications (SPAs).
 - **Persistence**: Site settings and positions are stored using `chrome.storage.local`.
-
----
-
-## 🗑️ Uninstallation
-We’re sorry to see you go! If you choose to remove the extension, you will be redirected to our [Uninstall Page](https://unintall.ga/tion) where you can provide feedback to help us improve.
 
 ---
 

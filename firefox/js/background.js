@@ -1,5 +1,7 @@
 const INSTALL_URL = "https://github.com/Pro-Bandey/WebGation/wiki/";
-const UNINSTALL_URL = "https://github.com/Pro-Bandey/WebGation";
+const UNINSTALL_URL = "https://github.com/Pro-Bandey/WebGation/issues/new/choose";
+
+const extApi = typeof browser !== "undefined" ? browser : chrome;
 
 const tabHistory = {};
 
@@ -34,12 +36,12 @@ function handleNavigationUpdate(tabId, info) {
 
 // --- Tab Events ---
 
-chrome.tabs.onRemoved.addListener((tabId) => {
+extApi.tabs.onRemoved.addListener((tabId) => {
   // `delete` is completely safe and won't throw an error even if the key doesn't exist
   delete tabHistory[tabId];
 });
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+extApi.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (!changeInfo.title || !tabHistory[tabId]) return; // Early exit reduces nesting
 
   const h = tabHistory[tabId];
@@ -53,7 +55,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 // --- Message Handling ---
 
 // Combined both onMessage listeners into a single clean switch statement
-chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+extApi.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg) return;
 
   const tabId = sender.tab?.id; // Optional chaining for cleaner extraction
@@ -61,7 +63,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   switch (msg.type) {
     case 'close-tab':
       if (tabId) {
-        chrome.tabs.remove(tabId, () => sendResponse({ ok: true }));
+        extApi.tabs.remove(tabId, () => sendResponse({ ok: true }));
         return true; // Keeps the channel open for the async callback
       }
       sendResponse({ ok: false, error: 'no-tab' });
@@ -80,7 +82,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       break;
 
     case 'open_new_tab':
-      chrome.tabs.create({});
+      extApi.tabs.create({});
       break;
   }
 });
@@ -88,20 +90,20 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 // --- Lifecycle Events ---
 
 const setupUninstallUrl = () => {
-  chrome.runtime.setUninstallURL(UNINSTALL_URL, () => {
-    if (chrome.runtime.lastError) {
-      console.warn("Could not set uninstall URL:", chrome.runtime.lastError);
+  extApi.runtime.setUninstallURL(UNINSTALL_URL, () => {
+    if (extApi.runtime.lastError) {
+      console.warn("Could not set uninstall URL:", extApi.runtime.lastError);
     }
   });
 };
 
-chrome.runtime.onInstalled.addListener((details) => {
-  if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
-    chrome.tabs.create({ url: INSTALL_URL, active: true });
+extApi.runtime.onInstalled.addListener((details) => {
+  if (details.reason === extApi.runtime.OnInstalledReason.INSTALL) {
+    extApi.tabs.create({ url: INSTALL_URL, active: true });
   }
   setupUninstallUrl();
 });
 
-chrome.runtime.onStartup.addListener(() => {
+extApi.runtime.onStartup.addListener(() => {
   setupUninstallUrl();
 });

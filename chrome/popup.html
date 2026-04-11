@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>webgation Settings</title>
+  <link rel="stylesheet" href="css/popup.css" />
+</head>
+
+<body>
+  <div class="container">
+    <div class="row">
+      <h2>WebGation</h2>
+       <a href="https://github.com/Pro-Bandey/WebGation" target="_blank">
+        Rate it
+      </a>
+    </div>
+    <hr />
+    <div class="row">
+      <strong>Current Site</strong>
+      <a id="siteOriginLink" target="_blank">
+        <div id="siteOrigin">—</div>
+      </a>
+    </div>
+
+    <div class="row">
+      <label for="enabledToggle" class="label-inline">Enable on this site</label>
+      <label class="switch">
+        <input type="checkbox" id="enabledToggle">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="row">
+      <label for="modeSelect" style="font-weight:800;font-size:16px;">Mode</label>
+      <select id="modeSelect">
+        <option selected value="static">Static</option>
+        <option value="floating">Floating</option>
+      </select>
+    </div>
+
+    <div class="row">
+      <label style="display: flex;flex-direction: column;">Floating position <span id="posInfo">—</span></label>
+      <button id="resetPos">Reset Position</button>
+    </div>
+
+    <hr />
+
+    <div class="row">
+      <button id="exportBtn">Export Settings</button>
+      <button id="importBtn">Import Settings</button>
+    </div>
+
+    <textarea id="jsonArea" placeholder="Paste settings JSON here to import or view exported JSON"></textarea>
+
+    <div class="row">
+      <button id="applyImport">Apply Import</button>
+      <button id="clearSite">Clear Site Settings</button>
+    </div>
+
+    <div id="status" class="status"></div>
+  </div>
+
+  <script src="js/popup.js"></script>
+</body>
+
+</html>
