@@ -38,7 +38,7 @@
 
 ### FireFox Browser
 
-- [Install]()
+- [Install](https://addons.mozilla.org/en-US/firefox/addon/webgation/)
 
 ---
 
